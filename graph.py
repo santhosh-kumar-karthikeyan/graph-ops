@@ -1,114 +1,115 @@
 class Graph:
-    def __init__(self, nodes = {}):
-        self.adj_list = {}
-        self.num_nodes = 1
+    def __init__(self, nodes: list[str] | dict[str, dict[str, list[str]]] = {}) -> None:
+        self.adj_list: dict[str, dict[str, list[str]]] = {}
+        self.num_nodes: int = 1
         for node in nodes:
-            self.adj_list[node] = list()
+            self.adj_list[node] = {"neighbours": []}
             self.num_nodes += 1
-            
-    def add_node(self, new_node, neighbours = list()):
-        self.adj_list[new_node] = neighbours
+
+    def add_node(self, new_node: str, neighbours: list[str] = []) -> None:
+        self.adj_list[new_node] = {"neighbours": neighbours}
         self.num_nodes += 1
         for neighbour in neighbours:
-            if(new_node not in self.adj_list[neighbour]):
-                self.adj_list[neighbour].append(new_node)
-        
-    def remove_node(self,target_node):
+            if new_node not in self.adj_list[neighbour]["neighbours"]:
+                self.adj_list[neighbour]["neighbours"].append(new_node)
+
+    def remove_node(self, target_node: str) -> None:
         for node in self.adj_list:
-            if(target_node in self.adj_list[node]):
-                self.adj_list[node].remove(target_node)
-        presence = self.adj_list.pop(target_node,False)
+            if target_node in self.adj_list[node]["neighbours"]:
+                self.adj_list[node]["neighbours"].remove(target_node)
+        presence: bool | dict[str, list[str]] = self.adj_list.pop(target_node, False)
         if not presence:
             print(f'Node {target_node} not found.')
         else:
             self.num_nodes -= 1
-            
-    def check_edge(self,start,end):
+
+    def check_edge(self, start: str, end: str) -> int:
         # -1 if start doesn't exist, -2 if end doesn't exist, 1 elsewhere (even when an edge doesn't exist)
-        if(start not in self.adj_list):
+        if start not in self.adj_list:
             return -1
         if end not in self.adj_list:
             return -2
         return 1
-    
-    def add_edge(self,start, end):
-        #direction might be needed in the future, so the naming convention of start and end
-        edge_presence = self.check_edge(start,end)
+
+    def add_edge(self, start: str, end: str) -> None | int:
+        # direction might be needed in the future, so the naming convention of start and end
+        edge_presence: int = self.check_edge(start, end)
         if edge_presence != 1:
             return edge_presence
-        if(start not in self.adj_list[end]):
-            self.adj_list[end].append(start)
-        if(end not in self.adj_list[start]):
-            self.adj_list[start].append(end)
-        
-    def del_edge(self,start,end):
-        edge_presence = self.check_edge(start,end)
+        if start not in self.adj_list[end]["neighbours"]:
+            self.adj_list[end]["neighbours"].append(start)
+        if end not in self.adj_list[start]["neighbours"]:
+            self.adj_list[start]["neighbours"].append(end)
+
+    def del_edge(self, start: str, end: str) -> None | int:
+        edge_presence: int = self.check_edge(start, end)
         if edge_presence != 1:
             return edge_presence
-        if(start in self.adj_list[end]):
-            self.adj_list[end].remove(start)
-        if(end in self.adj_list[start]):
-            self.adj_list[start].remove(end)
-        
-    def display_node(self,node):
-        print(f'{node} -> ',end='')
-        first = True
-        for neighbour in self.adj_list[node]:
-            print(f' {neighbour}', end="") if first else print(f' , {neighbour}',end="")
+        if start in self.adj_list[end]["neighbours"]:
+            self.adj_list[end]["neighbours"].remove(start)
+        if end in self.adj_list[start]["neighbours"]:
+            self.adj_list[start]["neighbours"].remove(end)
+
+    def display_node(self, node: str) -> None:
+        print(f'{node} -> ', end='')
+        neighbours: list[str] = self.adj_list[node]["neighbours"]
+        first: bool = True
+        for neighbour in neighbours:
+            print(f' {neighbour}', end="") if first else print(f' , {neighbour}', end="")
             first = False
         print()
-        
-    def display_graph(self):
+
+    def display_graph(self) -> None:
         for node in self.adj_list:
             self.display_node(node)
-    
-    def bfs(self,start,target):
-        fringe = list(start)
-        explored = list()
+
+    def bfs(self, start: str, target: str) -> str | list[str]:
+        fringe: list[str] = list(start)
+        explored: list[str] = []
         while len(fringe) != 0:
             print(f'Fringe: {fringe}\nExplored: {explored}')
-            curr_node = fringe.pop(0)
+            curr_node: str = fringe.pop(0)
             if curr_node not in explored:
                 explored.append(curr_node)
             if curr_node == target:
                 return " -> ".join(explored)
-            for node in self.adj_list[curr_node]:
-                if node not in fringe:
+            for node in self.adj_list[curr_node]["neighbours"]:
+                if node not in fringe and node not in explored:
                     fringe.append(node)
         return []
-        
-    def dfs_helper(self,curr_node,explored, target):
+
+    def dfs_helper(self, curr_node: str, explored: list[str], target: str) -> bool:
         if curr_node == target:
             return True
-        for node in self.adj_list[curr_node]:
+        for node in self.adj_list[curr_node]["neighbours"]:
             if node not in explored:
                 explored.append(node)
-                if self.dfs_helper(node,explored,target):
+                if self.dfs_helper(node, explored, target):
                     return True
         return False
-    
-    def dfs(self,start,target):
-        explored = [start]
-        if self.dfs_helper(start,explored,target):
-            return (" -> ".join(explored))
+
+    def dfs(self, start: str, target: str) -> str:
+        explored: list[str] = [start]
+        if self.dfs_helper(start, explored, target):
+            return " -> ".join(explored)
         else:
             return ""
 
 if __name__ == "__main__":
-    graph = Graph(["a", "b","c","d","e","f","g"]);
-    graph.add_edge("a","b")
-    graph.add_edge("a","c")
-    graph.add_edge("b","d")
+    graph: Graph = Graph(["a", "b", "c", "d", "e", "f", "g"])
+    graph.add_edge("a", "b")
+    graph.add_edge("a", "c")
+    graph.add_edge("b", "d")
     graph.add_edge("b", "e")
-    graph.add_edge("c","f")
+    graph.add_edge("c", "f")
     graph.add_edge("c", "g")
     graph.display_graph()
-    bfs_path = graph.bfs("a","g")
+    bfs_path: str | list[str] = graph.bfs("a", "g")
     if bfs_path != []:
         print(bfs_path)
     else:
         print(f'Target node not found')
-    dfs_path = graph.dfs('a','d')
+    dfs_path: str = graph.dfs('a', 'd')
     if dfs_path != "":
         print(dfs_path)
     else:
