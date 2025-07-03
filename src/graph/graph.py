@@ -1,3 +1,6 @@
+import json,os
+FILENAME = ".graph_data.json"
+
 class Graph:
     def __init__(self, nodes: list[str] | dict[str, dict[str, list[str]]] = {}) -> None:
         self.adj_list: dict[str, dict[str, list[str]]] = {}
@@ -94,6 +97,22 @@ class Graph:
             return " -> ".join(explored)
         else:
             return ""
+        
+    def to_dict(self) -> dict[str, dict[str, dict[str]]]:
+        return self.adj_list
+
+    def from_dict(self, data: dict[str, dict[str, list[str]]]) -> None:
+        self.adj_list = data
+        self.num_nodes = len(data)
+        
+    def save(self):
+        with(open(FILENAME, "w")) as f:
+            json.dump(self.to_dict(),f)
+    
+    def load(self):
+        if(os.path.exists(FILENAME)):
+            with(open(FILENAME,"r")) as f:
+                self.from_dict(json.load(f))
 
 if __name__ == "__main__":
     graph: Graph = Graph(["a", "b", "c", "d", "e", "f", "g"])
