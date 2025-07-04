@@ -4,7 +4,7 @@ FILENAME = ".graph_data.json"
 class Graph:
     def __init__(self, nodes: list[str] | dict[str, dict[str, list[str]]] = {}) -> None:
         self.adj_list: dict[str, dict[str, list[str]]] = {}
-        self.num_nodes: int = 1
+        self.num_nodes: int = 0
         for node in nodes:
             self.adj_list[node] = {"neighbours": []}
             self.num_nodes += 1
@@ -98,7 +98,7 @@ class Graph:
         else:
             return ""
         
-    def to_dict(self) -> dict[str, dict[str, dict[str]]]:
+    def to_dict(self) -> list[str] | dict[str, dict[str, list[str]]]:
         return self.adj_list
 
     def from_dict(self, data: dict[str, dict[str, list[str]]]) -> None:
