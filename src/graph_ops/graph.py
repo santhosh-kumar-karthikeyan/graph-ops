@@ -1,5 +1,7 @@
 import json,os
 from tabulate import tabulate
+import networkx as nx
+from asciinet import graph_to_ascii
 FILENAME = ".graph_data.json"
 
 class Graph:
@@ -74,21 +76,29 @@ class Graph:
     def display_node(self, node: str) -> str:
         if node not in self.adj_list.keys():
             return f"{node} deesn't exist"
-        path: str = f'{node} -> '
+        if not self.adj_list[node]["neighbours"]:
+            return f"{node} doesn't have any neighbours"
+        path: str = f'{node} '
         neighbours: list[str] = self.adj_list[node]["neighbours"]
         first: bool = True
         for neighbour in neighbours:
-            path += f' {neighbour }' if first else f' , {neighbour}'
+            path += f' -> {neighbour }' if first else f' , {neighbour}'
             first = False
         return path + '\n'
 
-    def display_graph(self) -> str:
+    def display_graph(self) -> str | None:
         if len(self.adj_list) == 0:
             return "No nodes to display"
-        disp: str = ""
+        edges: set = set()
+        for node,info in self.adj_list.items():
+            for neighbour in info["neighbours"]:
+                edge = tuple(sorted((node,neighbour)))
+                edges.add(edge)
+        G = nx.Graph(list(edges))
         for node in self.adj_list:
-            disp += self.display_node(node)
-        return disp
+            if not self.adj_list[node]["neighbours"]:
+                G.add_node(node)
+        print(graph_to_ascii(G))
 
     def bfs(self, start: str, target: str) -> str | list[str]:
         fringe: list[str] = list(start)

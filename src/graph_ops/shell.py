@@ -47,7 +47,9 @@ class GraphShell(cmd.Cmd):
         if arg is None:
             arg = ""
         if len(arg.split()) == 0:
-            print(self.graph.display_graph())
+            result: str | None = self.graph.display_graph()
+            if result is not None:
+                print(result)
         else:
             node = arg.split()
             print(self.graph.display_node(node[0]))
