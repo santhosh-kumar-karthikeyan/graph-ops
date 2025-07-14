@@ -33,8 +33,7 @@ class Graph:
         presence: bool | dict[str, list[str]] = self.adj_list.pop(target_node, False)
         if not presence:
             return(f'Node {target_node} not found.')
-        else:
-            self.num_nodes -= 1
+        self.num_nodes -= 1
         return f"{target_node} removed from the graph"
 
     def check_edge(self, start: str, end: str) -> str:
