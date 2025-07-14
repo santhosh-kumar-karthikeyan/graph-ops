@@ -14,8 +14,7 @@ class GraphShell(cmd.Cmd):
         'Add a node: add_node NODE'
         node = arg.strip()
         if node:
-            self.graph.add_node(node)
-            print(f"Added node: {node}")
+            print(self.graph.add_node(node))
         else:
             print("Usage: add_node NODE")
 
@@ -23,8 +22,7 @@ class GraphShell(cmd.Cmd):
         'Remove a node: remove_node NODE'
         node = arg.strip()
         if node:
-            self.graph.remove_node(node)
-            print(f"Removed node: {node}")
+            print(self.graph.remove_node(node))
         else:
             print("Usage: remove_node NODE")
 
@@ -32,8 +30,7 @@ class GraphShell(cmd.Cmd):
         'Add an edge: add_edge NODE1 NODE2'
         try:
             node1, node2 = arg.split()
-            self.graph.add_edge(node1, node2)
-            print(f"Added edge between {node1} and {node2}")
+            print(self.graph.add_edge(node1, node2))
         except ValueError:
             print("Usage: add_edge NODE1 NODE2")
 
@@ -41,14 +38,19 @@ class GraphShell(cmd.Cmd):
         'Remove an edge: remove_edge NODE1 NODE2'
         try:
             node1, node2 = arg.split()
-            self.graph.remove_edge(node1, node2)
-            print(f"Removed edge between {node1} and {node2}")
+            print(self.graph.remove_edge(node1, node2))
         except ValueError:
             print("Usage: remove_edge NODE1 NODE2")
 
-    def do_display(self, arg: str) -> None:
-        'Display the current graph'
-        self.graph.display_graph()
+    def do_display(self, arg: str | None = None) -> None:
+        'Display the graph or a node. Usage: display | display node_name'
+        if arg is None:
+            arg = ""
+        if len(arg.split()) == 0:
+            print(self.graph.display_graph())
+        else:
+            node = arg.split()
+            print(self.graph.display_node(node[0]))
 
     def do_save(self, arg: str) -> None:
         'Save the current graph to disk'
