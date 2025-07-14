@@ -63,16 +63,26 @@ class GraphShell(cmd.Cmd):
         'Load the graph from disk'
         self.graph.load()
         print("Graph loaded.")
-
+    def do_bfs(self,arg: str) -> None:
+        'Search for target node in Breadth first fashion: bfs start target'
+        try:
+            start,target = arg.split()
+            print(self.graph.bfs(start,target))
+        except ValueError:
+            print("Usage: bfs start target")
+    def do_dfs(self,arg: str) -> None:
+        'Search for a target node in Depth first manner: dfs start target'
+        try:
+            start,target = arg.split()
+            print(self.graph.dfs(start,target))
+        except ValueError:
+            print("Usage: dfs start target")
+            
     def do_exit(self, arg: str) -> bool:
         'Exit the shell'
         self.graph.save()
         print("Graph saved.")
         return True
-
-    def do_EOF(self, arg: str) -> bool:
-        'Exit with Ctrl-D'
-        return self.do_exit(arg)
 
 
 def shell():

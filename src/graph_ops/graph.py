@@ -100,8 +100,8 @@ class Graph:
                 G.add_node(node)
         print(graph_to_ascii(G))
 
-    def bfs(self, start: str, target: str) -> str | list[str]:
-        fringe: list[str] = list(start)
+    def bfs(self, start: str, target: str) -> str:
+        fringe: list[str] = [start]
         explored: list[str] = []
         trace: list[list[str]] = []
         print(f"BFS for target {target}")
@@ -117,7 +117,7 @@ class Graph:
                 if node not in fringe and node not in explored:
                     fringe.append(node)
         print(tabulate(trace,headers=["Fringe","Explored"],tablefmt="fancy_grid"))
-        return []
+        return f"{target} doesn't exist"
 
     def dfs_helper(self, curr_node: str, explored: list[str], target: str,path: list[str] | None = None, trace: list[list[str]] = []) -> bool:
         if path is None:
@@ -143,7 +143,7 @@ class Graph:
             return " -> ".join(explored)
         else:
             print(tabulate(trace,headers=["Fringe","Explored"],tablefmt="fancy_grid"))
-            return ""
+            return f"{target} is unreachable"
         
     def to_dict(self) -> list[str] | dict[str, dict[str, list[str]]]:
         return self.adj_list
