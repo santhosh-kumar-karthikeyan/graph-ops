@@ -116,7 +116,7 @@ class Graph:
                 if node not in fringe and node not in explored:
                     fringe.append(node)
         print(tabulate(trace,headers=["Fringe","Explored"],tablefmt="fancy_grid"))
-        return f"{target} doesn't exist"
+        return f"{target} can't be reached"
 
     def dfs_helper(self, curr_node: str, explored: list[str], target: str,path: list[str] | None = None, trace: list[list[str]] = []) -> bool:
         if path is None:
