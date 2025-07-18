@@ -2,35 +2,33 @@ import json,os
 from tabulate import tabulate
 import networkx as nx
 from asciinet import graph_to_ascii
+from typing import TypedDict
 FILENAME = ".graph_data.json"
 
 class Graph:
-    def __init__(self, nodes: list[str] | dict[str, dict[str, list[str]]] | None = None) -> None:
-        if nodes is None:
-            nodes = {}
-        self.adj_list: dict[str, dict[str, list[str]]] = {}
+    def __init__(self) -> None:
+        self.adj_list: dict[str, dict[str, int]] = {}
         self.num_nodes: int = 0
-        for node in nodes:
-            self.adj_list[node] = {"neighbours": []}
-            self.num_nodes += 1
 
-    def add_node(self, new_node: str, neighbours: list[str] | None = None) -> str | None:
+    def add_node(self, new_node: str, neighbours: dict[str, int] | None = None) -> str | None:
         if neighbours is None:
-            neighbours = []
+            neighbours = {}
         if(new_node in self.adj_list.keys()):
             return f"{new_node} already exists"
-        self.adj_list[new_node] = {"neighbours": neighbours}
+        self.adj_list[new_node] = neighbours.copy()
         self.num_nodes += 1
-        for neighbour in neighbours:
-            if new_node not in self.adj_list[neighbour]["neighbours"]:
-                self.adj_list[neighbour]["neighbours"].append(new_node)
+        for neighbour, cost in neighbours.items():
+            if neighbour not in self.adj_list:
+                self.adj_list[neighbour] = {}
+            if new_node not in self.adj_list[neighbour]:
+                self.adj_list[neighbour][new_node] = cost
         return f"{new_node} added to the graph."
 
     def remove_node(self, target_node: str) -> str:
         for node in self.adj_list:
-            if target_node in self.adj_list[node]["neighbours"]:
-                self.adj_list[node]["neighbours"].remove(target_node)
-        presence: bool | dict[str, list[str]] = self.adj_list.pop(target_node, False)
+            if target_node in self.adj_list[node]:
+                del self.adj_list[node][target_node]
+        presence: dict[str, int] | bool = self.adj_list.pop(target_node, False)
         if not presence:
             return(f'Node {target_node} not found.')
         self.num_nodes -= 1
@@ -46,58 +44,87 @@ class Graph:
             return f"{end} doesn't exist"
         return ""
 
-    def add_edge(self, start: str, end: str) -> str:
-        # direction might be needed in the future, so the naming convention of start and end
+    def add_edge(self, start: str, end: str, cost = 0) -> str:
         edge_presence: str = self.check_edge(start, end)
         if edge_presence != "":
             return edge_presence
-        edge_exists : bool = True
-        if start not in self.adj_list[end]["neighbours"]:
-            self.adj_list[end]["neighbours"].append(start)
-            edge_exists = False
-        if end not in self.adj_list[start]["neighbours"]:
-            self.adj_list[start]["neighbours"].append(end)
-            edge_exists = False
+        
+        edge_exists = end in self.adj_list[start] or start in self.adj_list[end]
+        
+        self.adj_list[end][start] = cost
+        self.adj_list[start][end] = cost
+        
         if edge_exists:
-            return f"Edge already exists between {start} and {end}"
-        return f"Edge added between {start} and {end}"
+            return f"Edge between {start} and {end} updated with cost {cost}"
+        else:
+            return f"Edge added between {start} and {end} with cost {cost}"
 
     def remove_edge(self, start: str, end: str) -> str:
         edge_presence: str = self.check_edge(start, end)
         if edge_presence != "":
             return edge_presence
-        if start in self.adj_list[end]["neighbours"]:
-            self.adj_list[end]["neighbours"].remove(start)
-        if end in self.adj_list[start]["neighbours"]:
-            self.adj_list[start]["neighbours"].remove(end)
+        if start in self.adj_list[end]:
+            del self.adj_list[end][start]
+        if end in self.adj_list[start]:
+            del self.adj_list[start][end]
         return f"Edge between {start} and {end} removed."
 
     def display_node(self, node: str) -> str:
         if node not in self.adj_list.keys():
-            return f"{node} deesn't exist"
-        if not self.adj_list[node]["neighbours"]:
+            return f"{node} doesn't exist"
+        if not self.adj_list[node]:
             return f"{node} doesn't have any neighbours"
         path: str = f'{node} '
-        neighbours: list[str] = self.adj_list[node]["neighbours"]
+        neighbours: list[str] = list(self.adj_list[node].keys())
         first: bool = True
         for neighbour in neighbours:
-            path += f' -> {neighbour }' if first else f' , {neighbour}'
+            cost = self.adj_list[node][neighbour]
+            path += f' -> {neighbour}({cost})' if first else f' , {neighbour}({cost})'
             first = False
         return path + '\n'
 
     def display_graph(self) -> str | None:
         if len(self.adj_list) == 0:
             return "No nodes to display"
-        edges: set = set()
-        for node,info in self.adj_list.items():
-            for neighbour in info["neighbours"]:
-                edge = tuple(sorted((node,neighbour)))
-                edges.add(edge)
-        G = nx.Graph(list(edges))
-        for node in self.adj_list:
-            if not self.adj_list[node]["neighbours"]:
-                G.add_node(node)
-        print(graph_to_ascii(G))
+        
+        weighted_edges: list[tuple] = []
+        isolated_nodes: list[str] = []
+        
+        for node, neighbours in self.adj_list.items():
+            if not neighbours:
+                isolated_nodes.append(node)
+            else:
+                for neighbour, cost in neighbours.items():
+                    edge = tuple(sorted((node, neighbour)))
+                    edge_with_weight = (edge[0], edge[1], cost)
+                    if edge_with_weight not in weighted_edges:
+                        weighted_edges.append(edge_with_weight)
+        
+        if weighted_edges:
+            G = nx.Graph()
+            for node1, node2, weight in weighted_edges:
+                G.add_edge(node1, node2)
+            
+            print("Graph structure:")
+            print(graph_to_ascii(G))
+            
+            print("\nEdge weights:")
+            for edge in weighted_edges:
+                node1, node2, weight = edge
+                print(f"  {node1} ←--({weight})--→ {node2}")
+        
+        if isolated_nodes:
+            if weighted_edges:
+                print("\nIsolated nodes:")
+            else:
+                print("Isolated nodes:")
+            for node in isolated_nodes:
+                name_width = max(len(node), 3) 
+                border = "─" * name_width
+                print(f"┌─{border}─┐")
+                print(f"│ {node:^{name_width}} │")
+                print(f"└─{border}─┘")
+                print()
 
     def bfs(self, start: str, target: str) -> str:
         fringe: list[str] = [start]
@@ -112,7 +139,7 @@ class Graph:
             if curr_node == target:
                 print(tabulate(trace,headers=["Fringe","Explored"],tablefmt="fancy_grid"))
                 return " -> ".join(explored)
-            for node in self.adj_list[curr_node]["neighbours"]:
+            for node in self.adj_list[curr_node].keys():
                 if node not in fringe and node not in explored:
                     fringe.append(node)
         return f"{target} can't be reached"
@@ -124,7 +151,7 @@ class Graph:
         trace.append([str(path), str(explored)])
         if curr_node == target:
             return True
-        for node in self.adj_list[curr_node]["neighbours"]:
+        for node in self.adj_list[curr_node].keys():
             if node not in explored:
                 explored.append(node)
                 if self.dfs_helper(node, explored, target,path,trace):
@@ -142,11 +169,56 @@ class Graph:
         else:
             print(tabulate(trace,headers=["Fringe","Explored"],tablefmt="fancy_grid"))
             return f"{target} is unreachable"
+    
+    def ucs(self, start: str, target: str) -> str:
+        if start not in self.adj_list:
+            return f"Start node {start} doesn't exist"
+        if target not in self.adj_list:
+            return f"Target node {target} doesn't exist"
+        priority_queue: list[tuple[int, str, list[str]]] = [(0, start, [start])]
+        explored: set[str] = set()
+        trace: list[list[str]] = []
         
-    def to_dict(self) -> list[str] | dict[str, dict[str, list[str]]]:
+        print(f"UCS for target {target}")
+        
+        while priority_queue:
+            current_cost, current_node, path = priority_queue.pop(0)
+            queue_display = [f"{node}({cost})" for cost, node, _ in priority_queue]
+            trace.append([str(queue_display), str(list(explored))])
+            if current_node in explored:
+                continue
+            explored.add(current_node)
+            if current_node == target:
+                print(tabulate(trace, headers=["Priority Queue", "Explored"], tablefmt="fancy_grid"))
+                return f"Path: {' -> '.join(path)}, Total cost: {current_cost}"
+            for neighbor, edge_cost in self.adj_list[current_node].items():
+                if neighbor not in explored:
+                    new_cost = current_cost + edge_cost
+                    new_path = path + [neighbor]
+                    new_entry = (new_cost, neighbor, new_path)
+                    self._insert_sorted(priority_queue, new_entry)
+        
+        print(tabulate(trace, headers=["Priority Queue", "Explored"], tablefmt="fancy_grid"))
+        return f"{target} is unreachable"
+    
+    def _insert_sorted(self, queue: list[tuple[int, str, list[str]]], item: tuple[int, str, list[str]]) -> None:
+        if not queue:
+            queue.append(item)
+            return
+        left, right = 0, len(queue)
+        target_cost = item[0]
+        while left < right:
+            mid = (left + right) // 2
+            if queue[mid][0] <= target_cost:
+                left = mid + 1
+            else:
+                right = mid
+        queue.insert(left, item)
+        
+    def to_dict(self) -> dict[str, dict[str, int]]:
         return self.adj_list
 
-    def from_dict(self, data: dict[str, dict[str, list[str]]]) -> None:
+    def from_dict(self, data: dict[str, dict[str, int]]) -> None:
         self.adj_list = data
         self.num_nodes = len(data)
         

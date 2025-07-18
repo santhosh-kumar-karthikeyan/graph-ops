@@ -1,1 +1,1 @@
-{"Sivakasi": {"neighbours": ["Chennai"]}, "Virudhunagar": {"neighbours": ["Chennai"]}, "Chennai": {"neighbours": ["Tirumalai", "Virudhunagar", "Sivakasi"]}, "Tirumalai": {"neighbours": ["Chennai"]}}
+{}

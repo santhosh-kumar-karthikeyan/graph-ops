@@ -27,12 +27,20 @@ class GraphShell(cmd.Cmd):
             print("Usage: remove_node NODE")
 
     def do_add_edge(self, arg: str) -> None:
-        'Add an edge: add_edge NODE1 NODE2'
-        try:
-            node1, node2 = arg.split()
-            print(self.graph.add_edge(node1, node2))
-        except ValueError:
-            print("Usage: add_edge NODE1 NODE2")
+        'Add an edge with optional cost: add_edge NODE1 NODE2 [COST] (default cost: 0)'
+        parts = arg.split()
+        if len(parts) == 2:
+            node1, node2 = parts
+            print(self.graph.add_edge(node1, node2, 0))
+        elif len(parts) == 3:
+            node1, node2, cost_str = parts
+            try:
+                cost = int(cost_str)
+                print(self.graph.add_edge(node1, node2, cost))
+            except ValueError:
+                print("Cost must be an integer")
+        else:
+            print("Usage: add_edge NODE1 NODE2 [COST] (default cost: 0)")
 
     def do_remove_edge(self, arg: str) -> None:
         'Remove an edge: remove_edge NODE1 NODE2'
@@ -77,6 +85,14 @@ class GraphShell(cmd.Cmd):
             print(self.graph.dfs(start,target))
         except ValueError:
             print("Usage: dfs start target")
+    
+    def do_ucs(self, arg: str) -> None:
+        'Search for target node using Uniform Cost Search: ucs start target'
+        try:
+            start, target = arg.split()
+            print(self.graph.ucs(start, target))
+        except ValueError:
+            print("Usage: ucs start target")
             
     def do_exit(self, arg: str) -> bool:
         'Exit the shell'
